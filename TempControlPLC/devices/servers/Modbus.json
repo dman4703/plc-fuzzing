@@ -1,0 +1,9 @@
+{
+  "name": "Modbus",
+  "protocol": "modbus-tcp",
+  "modbusSlaveConfig": {
+    "enabled": true,
+    "networkInterface": "127.0.0.1",
+    "port": 1502
+  }
+}

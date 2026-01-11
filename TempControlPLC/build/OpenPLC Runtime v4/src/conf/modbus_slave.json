@@ -1,0 +1,18 @@
+{
+  "plugin_modbus_slave": {
+    "type": "PLUGIN_TYPE_PYTHON",
+    "path": "core/src/drivers/modbus_slave.py",
+    "enabled": true,
+    "description": "Modbus TCP Slave server that exposes OpenPLC buffers"
+  },
+  "network_configuration": {
+    "host": "127.0.0.1",
+    "port": 1502
+  },
+  "buffer_mapping": {
+    "max_coils": 8000,
+    "max_discrete_inputs": 8000,
+    "max_holding_registers": 1000,
+    "max_input_registers": 1000
+  }
+}

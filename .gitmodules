@@ -1,0 +1,3 @@
+[submodule "openplc-runtime"]
+	path = openplc-runtime
+	url = https://github.com/dman4703/openplc-runtime
