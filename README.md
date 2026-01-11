@@ -17,9 +17,9 @@ The goal is to apply coverage-guided fuzzing to PLC logic to discover crashes, a
 ## Development Process
 
 ### 1. Environment Setup
-- Cloned OpenPLC v4 Runtime source on WSL and verified it builds from source.
-- Installed AFL++ on WSL and confirmed basic functionality.
-- Installed OpenPLC v4 Editor on Windows for generating and compiling PLC programs.
+- Cloned [OpenPLC v4 Runtime](https://autonomylogic.com/runtime) source on WSL and verified it builds from source.
+- Installed [AFL++](https://aflplus.plus/docs/install/) on WSL and confirmed basic functionality.
+- Installed [OpenPLC v4 Editor](https://autonomylogic.com/download) on Windows for generating and compiling PLC programs.
 
 ### 2. AFL++ Instrumentation of Runtime Core
 - Modified `openplc-runtime/core/src/CMakeLists.txt` to add a `FUZZING` build option.
