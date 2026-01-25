@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OPENPLC_DIR="${ROOT_DIR}/openplc-runtime"
+PLCFUZZ_ROOT="${ROOT_DIR}"
 
 if ! command -v afl-fuzz >/dev/null 2>&1; then
   echo "[!] afl-fuzz not found in PATH. Install AFL++ first: https://aflplus.plus/docs/install/" >&2
@@ -11,6 +12,9 @@ fi
 
 # Keep fuzz build artifacts isolated from any normal OpenPLC build.
 OPENPLC_BUILD_DIR="${OPENPLC_BUILD_DIR:-${OPENPLC_DIR}/build-afl}"
+
+# Keep plcfuzz build artifacts isolated from non-AFL builds.
+PLCFUZZ_BUILD_DIR="${PLCFUZZ_BUILD_DIR:-${PLCFUZZ_ROOT}/build-plcfuzz-afl}"
 
 echo "[+] Building OpenPLC core (FUZZING=ON) into: ${OPENPLC_BUILD_DIR}"
 rm -rf "${OPENPLC_BUILD_DIR}"
@@ -25,6 +29,11 @@ echo "[+] Building AFL-instrumented PLC program (libplc_*.so)"
 LIBPLC="$(ls -1 "${OPENPLC_BUILD_DIR}"/libplc_*.so | head -n 1)"
 echo "[+] Using PLC program library: ${LIBPLC}"
 
+echo "[+] Building plcfuzz (AFL-instrumented) into: ${PLCFUZZ_BUILD_DIR}"
+rm -rf "${PLCFUZZ_BUILD_DIR}"
+CC=afl-clang-fast CXX=afl-clang-fast++ cmake -S "${PLCFUZZ_ROOT}" -B "${PLCFUZZ_BUILD_DIR}" -DCMAKE_BUILD_TYPE=Release
+cmake --build "${PLCFUZZ_BUILD_DIR}" -j"$(nproc)"
+
 IN_DIR="${ROOT_DIR}/in"
 OUT_DIR="${ROOT_DIR}/out"
 
@@ -38,6 +47,9 @@ fi
 # dlopen()'ed library, preload it so AFL sees it before forkserver startup.
 export AFL_PRELOAD="${LIBPLC}"
 export OPENPLC_BUILD_DIR="${OPENPLC_BUILD_DIR}"
+
+# Target plugin to use (OpenPLC in-process)
+export PLCFUZZ_TARGET_LIB="${PLCFUZZ_BUILD_DIR}/targets/libplcfuzz_target_openplc_inproc.so"
 
 CORE_PATTERN_FILE="/proc/sys/kernel/core_pattern"
 CORE_PATTERN_BAK="/tmp/core_pattern.bak.openplc_fuzz.$$"
@@ -80,9 +92,9 @@ fi
 echo "[+] Running AFL++"
 echo "    in : ${IN_DIR}"
 echo "    out: ${OUT_DIR}"
-echo "    bin: ${OPENPLC_BUILD_DIR}/openplc_fuzz_target"
+echo "    bin: ${PLCFUZZ_BUILD_DIR}/plcfuzz_afl_harness"
 
-cd "${OPENPLC_DIR}"
+cd "${PLCFUZZ_ROOT}"
 MAX_LEN="${AFL_MAX_LEN:-20}"
-afl-fuzz -G "${MAX_LEN}" -i "${IN_DIR}" -o "${OUT_DIR}" -- "${OPENPLC_BUILD_DIR}/openplc_fuzz_target"
+afl-fuzz -G "${MAX_LEN}" -i "${IN_DIR}" -o "${OUT_DIR}" -- "${PLCFUZZ_BUILD_DIR}/plcfuzz_afl_harness"
 

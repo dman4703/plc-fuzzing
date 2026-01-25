@@ -1,0 +1,21 @@
+{
+  "host": "127.0.0.1",
+  "port": 1502,
+  "unit_id": 1,
+
+  "address_base": 1,
+
+  "write_start_addr": 1025,
+  "write_count": 8,
+
+  "timeout_ms": 200,
+  "post_write_delay_ms": 0,
+
+  "read_holding_start_addr": 0,
+  "read_holding_count": 0,
+  "read_coils_start_addr": 0,
+  "read_coils_count": 0,
+
+  "comm_error_outcome": "hang"
+}
+

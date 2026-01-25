@@ -1,0 +1,22 @@
+# Fuzzing outputs / build artifacts
+out/
+build/
+build-*/
+
+# OpenPLC build artifacts (repo contains openplc-runtime as submodule)
+openplc-runtime/build*/
+
+# Common compiler artifacts
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
