@@ -29,6 +29,45 @@ echo "    out: ${OUT_DIR}"
 echo "    bin: ${PLCFUZZ_BUILD_DIR}/plcfuzz_afl_harness"
 echo "    cfg: ${PLCFUZZ_CONFIG}"
 
+
+CORE_PATTERN_FILE="/proc/sys/kernel/core_pattern"
+CORE_PATTERN_BAK="/tmp/core_pattern.bak.plcfuzz_modbus.$$"
+CORE_PATTERN_CHANGED=0
+
+restore_core_pattern() {
+  if [ "${CORE_PATTERN_CHANGED}" -ne 1 ]; then
+    return 0
+  fi
+
+  if [ -f "${CORE_PATTERN_BAK}" ]; then
+    local old
+    old="$(cat "${CORE_PATTERN_BAK}" 2>/dev/null || true)"
+    if [ -n "${old}" ]; then
+      if [ "${EUID}" -eq 0 ]; then
+        echo "${old}" > "${CORE_PATTERN_FILE}" || true
+      else
+        echo "${old}" | sudo tee "${CORE_PATTERN_FILE}" >/dev/null || true
+      fi
+    fi
+    rm -f "${CORE_PATTERN_BAK}" || true
+  fi
+}
+
+if [ -r "${CORE_PATTERN_FILE}" ]; then
+  CORE_PATTERN_OLD="$(cat "${CORE_PATTERN_FILE}" || true)"
+  if [ "${CORE_PATTERN_OLD}" != "core" ]; then
+    echo "[+] Temporarily setting core_pattern to 'core' (was: ${CORE_PATTERN_OLD})"
+    echo "${CORE_PATTERN_OLD}" > "${CORE_PATTERN_BAK}"
+    if [ "${EUID}" -eq 0 ]; then
+      echo core > "${CORE_PATTERN_FILE}"
+    else
+      echo core | sudo tee "${CORE_PATTERN_FILE}" >/dev/null
+    fi
+    CORE_PATTERN_CHANGED=1
+    trap restore_core_pattern EXIT INT TERM
+  fi
+fi
+
 MAX_LEN="${AFL_MAX_LEN:-128}"
 afl-fuzz -G "${MAX_LEN}" -i "${IN_DIR}" -o "${OUT_DIR}" -- "${PLCFUZZ_BUILD_DIR}/plcfuzz_afl_harness"
 

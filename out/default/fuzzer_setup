@@ -1,7 +1,0 @@
-# environment variables:
-AFL_CUSTOM_INFO_PROGRAM=/home/dman4703/PLC-project/plc-fuzzing/build-plcfuzz-afl/plcfuzz_afl_harness
-AFL_CUSTOM_INFO_PROGRAM_ARGV=
-AFL_CUSTOM_INFO_OUT=/home/dman4703/PLC-project/plc-fuzzing/out/default
-AFL_PRELOAD=/home/dman4703/PLC-project/plc-fuzzing/openplc-runtime/build-afl/libplc_1769375492653563353.so
-# command line:
-'afl-fuzz' '-G' '20' '-i' '/home/dman4703/PLC-project/plc-fuzzing/in' '-o' '/home/dman4703/PLC-project/plc-fuzzing/out' '--' '/home/dman4703/PLC-project/plc-fuzzing/build-plcfuzz-afl/plcfuzz_afl_harness'

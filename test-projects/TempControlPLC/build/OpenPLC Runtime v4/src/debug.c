@@ -58,11 +58,11 @@ size_t get_var_size(size_t idx)
         return 0;
     }
     switch (debug_vars[idx].type) {
+    case BOOL_O_ENUM:
+        return sizeof(BOOL);
     case INT_ENUM:
     case INT_O_ENUM:
         return sizeof(INT);
-    case BOOL_O_ENUM:
-        return sizeof(BOOL);
     default:
         return 0;
     }
@@ -73,16 +73,16 @@ void *get_var_addr(size_t idx)
     void *ptr = debug_vars[idx].ptr;
 
     switch (debug_vars[idx].type) {
+    case BOOL_O_ENUM:
+        return (void *)((((__IEC_BOOL_p *) ptr)->flags & __IEC_FORCE_FLAG)
+                        ? &(((__IEC_BOOL_p *) ptr)->fvalue)
+                        : ((__IEC_BOOL_p *) ptr)->value);
     case INT_ENUM:
         return (void *)&((__IEC_INT_t *) ptr)->value;
     case INT_O_ENUM:
         return (void *)((((__IEC_INT_p *) ptr)->flags & __IEC_FORCE_FLAG)
                         ? &(((__IEC_INT_p *) ptr)->fvalue)
                         : ((__IEC_INT_p *) ptr)->value);
-    case BOOL_O_ENUM:
-        return (void *)((((__IEC_BOOL_p *) ptr)->flags & __IEC_FORCE_FLAG)
-                        ? &(((__IEC_BOOL_p *) ptr)->fvalue)
-                        : ((__IEC_BOOL_p *) ptr)->value);
     default:
         return 0;
     }
@@ -95,6 +95,13 @@ void force_var(size_t idx, bool forced, void *val)
     if (forced) {
         size_t var_size = get_var_size(idx);
         switch (debug_vars[idx].type) {
+    
+        case BOOL_O_ENUM: {
+            memcpy((((__IEC_BOOL_p *) ptr)->value), val, var_size);
+            memcpy(&((__IEC_BOOL_p *) ptr)->fvalue, val, var_size);
+            ((__IEC_BOOL_p *) ptr)->flags |= __IEC_FORCE_FLAG;
+            break;
+        }
         case INT_ENUM: {
             memcpy(&((__IEC_INT_t *) ptr)->value, val, var_size);
             ((__IEC_INT_t *) ptr)->flags |= __IEC_FORCE_FLAG;
@@ -107,26 +114,19 @@ void force_var(size_t idx, bool forced, void *val)
             ((__IEC_INT_p *) ptr)->flags |= __IEC_FORCE_FLAG;
             break;
         }
-    
-        case BOOL_O_ENUM: {
-            memcpy((((__IEC_BOOL_p *) ptr)->value), val, var_size);
-            memcpy(&((__IEC_BOOL_p *) ptr)->fvalue, val, var_size);
-            ((__IEC_BOOL_p *) ptr)->flags |= __IEC_FORCE_FLAG;
-            break;
-        }
         default:
             break;
         }
     } else {
         switch (debug_vars[idx].type) {
+        case BOOL_O_ENUM:
+            ((__IEC_BOOL_p *) ptr)->flags &= ~__IEC_FORCE_FLAG;
+            break;
         case INT_ENUM:
             ((__IEC_INT_t *) ptr)->flags &= ~__IEC_FORCE_FLAG;
             break;
         case INT_O_ENUM:
             ((__IEC_INT_p *) ptr)->flags &= ~__IEC_FORCE_FLAG;
-            break;
-        case BOOL_O_ENUM:
-            ((__IEC_BOOL_p *) ptr)->flags &= ~__IEC_FORCE_FLAG;
             break;
         default:
             break;
